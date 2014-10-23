@@ -133,6 +133,7 @@ module 'DashboardView', ->
                 model: @model
 
             @stats = new Stats
+
             @stats_timer = driver.run(
                 r.db(system_db)
                 .table('stats').get(['cluster'])
