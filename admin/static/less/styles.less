@@ -2357,7 +2357,7 @@ TODO: retire this
     Element views
     ----------------------------
 */
-#database-view, #table-view, #datacenter-view, #server-view {
+#database-view, #table-view, #datacenter-view, #server-view, .reconfigure-modal {
     h1.title {
         font-family: @serif;
         color: #4d535c;
@@ -2573,8 +2573,8 @@ TODO: retire this
     }
 }
 
-#table-view {
-    .section.tree-view.server-assignments {
+#table-view, .reconfigure-modal {
+    .section.tree-view.server-assignments, .tree-view{
         @element_height: 40px;
         li.server .server-info {
             background: left center no-repeat url('images/server-icon.png');
@@ -2583,23 +2583,25 @@ TODO: retire this
                 width: 300px;
                 height: @element_height;
             }
-            .primary {
-                right: 150px;
-                width: 145px;
+            .primary, .secondary {
+                width: 250px;
+                right: 0px;
+                text-align: left;
                 padding-left: 30px;
+            }
+            .primary {
                 background: left center no-repeat url('images/layers-icon.png');
             }
             .secondary {
-                right: 150px;
-                width: 145px;
-                padding-left: 30px;
                 background: left center no-repeat url('images/grid-icon.png');
             }
         }
         .num-keys {
+            position: relative;
             float: right;
-            margin-right: 183px;
-            padding-left: 35px;
+            right: 160px;
+            width: 150px;
+            padding-left: 30px;
             background: left center no-repeat url('images/bars-icon_server-assignments.png');
         }
     }
@@ -3370,18 +3372,82 @@ TODO: retire this
 
 .reconfigure-panel {
     font-family: @sans;
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: thin solid #f0f0f0;
+        h2 {
+            display: inline-block;
+            border-bottom: none;
+            font-family: @serif;
+            color: #a3a3a3;
+            font-size: 19px;
+        }
+        .info {
+            display: flex;
+            align-items: center;
+        }
+        button {
+            height: 75%;
+            margin: 0px 10px;
+        }
+    }
+    span.value {
+        padding: 0px 6px 0px 6px;
+        color: #f7ae41;
+        font-size: 24px;
+        line-height: 48px;
+    }
+    span.caption {
+        color: #a9a9a9;
+        font-size: 14px;
+    }
+
+}
+
+.reconfigure-modal {
+    // override some bootstrap modal styles since this is a special box
+    @box-width: 940px;
+    position: absolute;
+    width: @box-width;
+    margin-left: -(@box-width / 2);
+    margin-top: 0;
+    top: 50px;
+    .intro {
+        display: flex;
+        justify-content: space-between;
+    }
+    p {
+        max-width: 500px;
+    }
+    .modal-body {
+        max-height: 100%;
+    }
+    span.caption {
+        color: #a9a9a9;
+        font-size: 14px;
+    }
     .reconfigure-form {
-        display: none;
-        .edit-shards, .edit-replicas {
-            width: 3em;
+        display: flex;
+        align-items: center;
+        margin: 0px;
+        .inline-edit {
+            width: 2em;
+            padding: 0px 6px;
+            margin: 0px 5px;
+            height: 28px;
+            font-size: 24px;
+            font-family: @sans;
         }
     }
     .reconfigure-diff {
-        display: none;
+        li: height: 10px;
+        display: block;
         .deleted {
             font-weight: bold;
             color: red;
-            background-color: #fee;
+            background-color: rgba(255,0,0,0.25);
         }
         span.deleted::after {
             content: "-";
@@ -3390,14 +3456,11 @@ TODO: retire this
         .added {
             font-weight: bold;
             color: green;
-            background-color: #efe;
+            background-color: rgba(0,255,0,0.25);
         }
         span.added::after {
             content: "+";
             vertical-align: super;
-        }
-        li.replica {
-            padding-left: 2em;
         }
     }
 }

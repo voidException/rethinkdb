@@ -1,0 +1,17 @@
+<div class="intro">
+  <p>
+    View the results of changing sharding and replication for the table
+    <strong>{{db}}.{{name}}</strong>.
+    When you're satisfied with the server assignments, click "Apply" to
+    enact the changes.
+  </p>
+  <form class="reconfigure-form">
+    <input class="shards inline-edit" value="{{num_shards}}"></input>
+    <span class="caption">shards</span>
+    <input class="replicas inline-edit" value="{{num_replicas_per_shard}}"></input>
+    <span class="caption">replicas per shard</span>
+    <button class="apply btn-primary btn">Apply</button>
+  </form>
+</div>
+<div class="alert alert-error error"></div>
+<div class='reconfigure-diff tree-view'></div>

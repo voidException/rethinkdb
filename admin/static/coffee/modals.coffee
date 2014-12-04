@@ -397,3 +397,175 @@ module 'Modals', ->
 
             @model.get('parent').set('fixed', true)
             @
+
+    # Modals.ReconfigureModal
+    class @ReconfigureModal extends UIComponents.AbstractModal
+        template: Handlebars.templates['reconfigure-modal']
+
+        class: 'reconfigure-modal'
+
+        events:
+            'keyup .replicas.inline-edit': 'change_replicas'
+            'keyup .shards.inline-edit': 'change_shards'
+
+        initialize: (obj) =>
+            @fetch_dryrun()
+            @listenTo @model, 'change:num_replicas_per_shard', @fetch_dryrun
+            @listenTo @model, 'change:num_shards', @fetch_dryrun
+            super(obj)
+
+        render: =>
+            console.log 'rendering modal'
+            super $.extend(@model.toJSON(),
+                modal_title: "Reconfigure #{@model.get('db')}.#{@model.get('name')}"
+                btn_primary_text: 'Apply'
+            )
+
+            @diff_view = new TableView.ReconfigureDiffView
+                model: @model
+                el: @$('.reconfigure-diff')[0]
+            @
+        
+        remove: =>
+            if diff_view?
+                diff_view.remove()
+            super()
+            
+        change_replicas: =>
+            num = parseInt @$('.replicas.inline-edit').val()
+            if not isNaN num
+                @model.set 'num_replicas_per_shard', num
+
+        change_shards: =>
+            num = parseInt @$('.shards.inline-edit').val()
+            if not isNaN num
+                @model.set 'num_shards', num
+
+        fetch_dryrun: =>
+            
+            if not @model.get('num_shards')? or not @model.get('num_replicas_per_shard')?
+                return
+            id = (x) -> x
+            query = r.db(@model.get('db'))
+                .table(@model.get('name'))
+                .reconfigure
+                    shards: @model.get('num_shards')
+                    replicas: @model.get('num_replicas_per_shard')
+                    dryRun: true
+                .do((diff) ->
+                    r.object(r.args(diff.keys().map((key) ->
+                        [key, diff(key)('config')('shards')]
+                    ).concatMap(id)))
+                ).do((doc) ->
+                    doc.merge
+                        # this creates a servername -> id map we can
+                        # use later to create the links
+                        lookups: r.object(r.args(
+                            doc('new_val')('replicas').concatMap(id)
+                                .setUnion(doc('old_val')('replicas').concatMap(id))
+                                .concatMap (server) -> [
+                                    server,
+                                    r.db(system_db).table('server_status')
+                                        .filter(name: server)(0)('id')
+                                ]
+                        ))
+                )
+                
+            driver.run_once query, (error, result) =>
+                if error?
+                    @model.set
+                        error: error.message
+                else
+                    @model.set
+                        shards: @fixup_shards result.old_val,
+                            result.new_val
+                            result.lookups
+                        error: null
+
+        # Sorts shards in order of current primary first, old primary (if
+        # any), then secondaries in lexicographic order
+        shard_sort: (a, b) ->
+            if a.role == 'primary'
+                -1
+            else if 'primary' in [b.role, b.old_role]
+                +1
+            else if a.role == b.role
+                if a.name == b.name
+                    0
+                else if a.name < b.name
+                    -1
+                else
+                    +1
+
+        # determines role of a replica
+        role: (isPrimary) ->
+            if isPrimary then 'primary' else 'secondary'
+
+        fixup_shards: (old_shards, new_shards, lookups) =>
+            shard_diffs = []
+            docs_per_shard = Math.round(
+                @model.get('total_keys') / new_shards.length)
+
+            # first handle shards that are in old (and possibly in new)
+            for old_shard, i in old_shards
+                if i >= new_shards.length
+                    new_shard = {director: null, replicas: []}
+                    shard_deleted = true
+                    num_docs = 0
+                else
+                    new_shard = new_shards[i]
+                    shard_deleted = false
+                    num_docs = docs_per_shard
+
+                shard_diff =
+                    replicas: []
+                    change: if shard_deleted then 'deleted' else null
+                    num_docs: num_docs
+
+                # handle any deleted and remaining replicas for this shard
+                for replica in old_shard.replicas
+                    replica_deleted = replica not in new_shard.replicas
+                    if replica_deleted
+                        new_role = null
+                    else
+                        new_role = @role(replica == new_shard.director)
+                    old_role = @role(replica == old_shard.director)
+
+                    shard_diff.replicas.push
+                        name: replica
+                        id: lookups[replica]
+                        change: if replica_deleted then 'deleted' else null
+                        role: new_role
+                        old_role: old_role
+                        role_change: not replica_deleted and new_role != old_role
+                # handle any new replicas for this shard
+                for replica in new_shard.replicas
+                    if replica in old_shard.replicas
+                        continue
+                    shard_diff.replicas.push
+                        name: replica
+                        id: lookups[replica]
+                        change: 'added'
+                        role: @role(replica == new_shard.director)
+                        old_role: null
+                        role_change: false
+
+                shard_diff.replicas.sort @shard_sort
+                shard_diffs.push(shard_diff)
+            # now handle any new shards beyond what old_shards has
+            for new_shard in new_shards.slice(old_shards.length)
+                shard_diff =
+                    replicas: []
+                    change: 'added'
+                    num_docs: docs_per_shard
+                for replica in new_shard.replicas
+                    shard_diff.replicas.push
+                        name: replica
+                        id: lookups[replica]
+                        change: 'added'
+                        role: @role(replica == new_shard.director)
+                        old_role: null
+                        role_change: false
+                shard_diff.replicas.sort @shard_sort
+                shard_diffs.push(shard_diff)
+            shard_diffs
