@@ -14,7 +14,7 @@
   {{#each replicas}}
   <li class="server child {{change}}">
     <div class="tree-node"></div>
-    <div class="server-info child-info">
+    <div class="server-info child-info {{change}}">
       <p class="name"><a href="#/servers/{{id}}">{{name}}</a></p>
       {{#unless role_change}}
       {{#if role}}
@@ -25,8 +25,8 @@
       {{else}}
       <p class="{{role}}">
         <span class="highlight">
-          <span class="deleted">{{capitalize old_role}}</span> replica <b>&rarr;</b>
-          <span class="added">{{capitalize role}}</span> replica
+          <span class="deleted">{{capitalize old_role}}</span> <b>&rarr;</b>
+          {{capitalize role}} replica
         </span>
       </p> 
       {{/unless}}

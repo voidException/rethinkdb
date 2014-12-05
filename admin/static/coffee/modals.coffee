@@ -417,7 +417,8 @@ module 'Modals', ->
         render: =>
             console.log 'rendering modal'
             super $.extend(@model.toJSON(),
-                modal_title: "Reconfigure #{@model.get('db')}.#{@model.get('name')}"
+                modal_title: "Reconfigure shards and replicas for " +
+                    "#{@model.get('db')}.#{@model.get('name')}"
                 btn_primary_text: 'Apply'
             )
 

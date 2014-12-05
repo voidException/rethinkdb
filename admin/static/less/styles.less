@@ -2578,6 +2578,12 @@ TODO: retire this
         @element_height: 40px;
         li.server .server-info {
             background: left center no-repeat url('images/server-icon.png');
+            &.added {
+                background: left center no-repeat url('images/server-icon-added.png');
+            }
+            &.deleted {
+                background: left center no-repeat url('images/server-icon-removed.png');
+            }
             padding-left: 30px;
             .name {
                 width: 300px;
@@ -3408,7 +3414,7 @@ TODO: retire this
 
 .reconfigure-modal {
     // override some bootstrap modal styles since this is a special box
-    @box-width: 940px;
+    @box-width: 600px;
     position: absolute;
     width: @box-width;
     margin-left: -(@box-width / 2);
@@ -3417,12 +3423,18 @@ TODO: retire this
     .intro {
         display: flex;
         justify-content: space-between;
+        flex-wrap: wrap;
     }
     p {
         max-width: 500px;
     }
     .modal-body {
         max-height: 100%;
+    }
+    .modal-footer {
+        .btn {
+            display: none
+        }
     }
     span.caption {
         color: #a9a9a9;
@@ -3442,25 +3454,28 @@ TODO: retire this
         }
     }
     .reconfigure-diff {
-        li: height: 10px;
-        display: block;
-        .deleted {
-            font-weight: bold;
-            color: red;
-            background-color: rgba(255,0,0,0.25);
+        li {
+            //height: 10px;
         }
-        span.deleted::after {
-            content: "-";
-            vertical-align: super;
+        display: block;
+        font-size: 10px !important;
+        .deleted {
+            color: #aaa;
+            //text-decoration: line-through;
+            background-color: rgba(255, 0, 0, 0.10);
+            a {
+                color: #aaa;
+                //text-decoration: line-through;
+            }
         }
         .added {
+            background-color: rgba(0,255,0, 0.10);
             font-weight: bold;
-            color: green;
-            background-color: rgba(0,255,0,0.25);
         }
-        span.added::after {
-            content: "+";
-            vertical-align: super;
+        .highlight.change {
+            border-radius: 5px;
+            padding: 2px;
+            border: 2px solid red;
         }
     }
 }
