@@ -6,10 +6,16 @@
     enact the changes.
   </p>
   <form class="reconfigure-form">
-    <input class="shards inline-edit" value="{{num_shards}}"></input>
-    <span class="caption">shards</span>
-    <input class="replicas inline-edit" value="{{num_replicas_per_shard}}"></input>
-    <span class="caption">replicas per shard</span>
+    <div>
+      <input class="shards inline-edit"
+             value="{{num_shards}}"></input>
+      <span class="caption">shards</span>
+    </div>
+    <div>
+      <input class="replicas inline-edit"
+             value="{{num_replicas_per_shard}}"></input>
+      <span class="caption">replicas per shard</span>
+    </div>
     <button class="apply btn-primary btn">Apply</button>
   </form>
 </div>

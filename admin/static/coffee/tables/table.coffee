@@ -62,7 +62,7 @@ module 'TableView', ->
                                 total_keys: null
                             ).do( (table) ->
                                 r.branch( # We must be sure that the table is ready before retrieving these keys
-                                    table('status')('ready_for_outdated_reads').not(),
+                                    table('status')('ready_for_reads').not(),
                                     table,
                                     table.merge({
                                         indexes: r.db(table("db")).table(table("name")).indexStatus()
@@ -73,20 +73,20 @@ module 'TableView', ->
                                                 table: table("name")
                                             }) # add an id for backbone
                                         distribution: r.db(table('db'))
-                                            .table(table('name'), useOutdated: true)
+                                            .table(table('name'))
                                             .info()('doc_count_estimates')
                                             .map(r.range(), (num_keys, position) ->
                                                 num_keys: num_keys
                                                 id: position)
                                             .coerceTo('array')
                                         total_keys: r.db(table('db'))
-                                            .table(table('name'), useOutdated: true)
+                                            .table(table('name'))
                                             .info()('doc_count_estimates')
                                             .sum()
                                         shards_assignments: table('shards_assignments').map(r.range(), (shard_assignment, position) ->
                                             shard_assignment.merge {
                                                 num_keys: r.db(table('db'))
-                                                    .table(table('name'), useOutdated: true)
+                                                    .table(table('name'))
                                                     .info()('doc_count_estimates')(position)
                                             }
                                         ).coerceTo('array')
@@ -252,12 +252,8 @@ module 'TableView', ->
 
             @stats = new Stats
             @stats_timer = driver.run(
-                r.db('rethinkdb_mock').table('stats')
+                r.db('rethinkdb').table('stats')
                 .get(["table", @model.get('id')])
-                .default
-                    query_engine:
-                        read_docs_per_sec: r.random(1,100)
-                        written_docs_per_sec: r.random(1,100)
                 .do((stat) ->
                     keys_read: stat('query_engine')('read_docs_per_sec')
                     keys_set: stat('query_engine')('written_docs_per_sec')
@@ -389,6 +385,7 @@ module 'TableView', ->
                     shards: []
                     num_shards: @model.get('num_shards')
                     num_replicas_per_shard: @model.get('num_replicas_per_shard')
+                    max_replicas_per_shard: @model.get('max_replicas_per_shard')
             @reconfigure_modal.render()
 
         remove: =>

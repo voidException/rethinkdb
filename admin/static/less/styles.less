@@ -2484,7 +2484,7 @@ TODO: retire this
                 width: @square_bullet_width;
                 background-image: url('images/list-square-bullet.png'), url('images/list-vert-dash.png'); 
                 background-position: left top, ((@square_bullet_width / 2) - 1) center;
-                background-repeat: no-repeat, repeat-y;  
+                background-repeat: no-repeat, repeat-y;
             }
             // parent element details
             .parent-info {
@@ -2903,6 +2903,10 @@ TODO: retire this
             text { fill: #a3a3a3; }
             .shard-diagram{
                 display: none;
+                width: 100%;
+                height: 100%;
+                //width: 700px;
+                //height: 350px;
             }
         }
     }
@@ -3378,26 +3382,18 @@ TODO: retire this
 
 .reconfigure-panel {
     font-family: @sans;
-    .header {
+    .info {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        border-bottom: thin solid #f0f0f0;
-        h2 {
-            display: inline-block;
-            border-bottom: none;
-            font-family: @serif;
-            color: #a3a3a3;
-            font-size: 19px;
+        justify-content: space-between;
+        div {
+            
+            vertical-align: middle;
         }
-        .info {
-            display: flex;
-            align-items: center;
-        }
-        button {
-            height: 75%;
-            margin: 0px 10px;
-        }
+    }
+    button {
+        height: 75%;
+        margin: 0px 5px;
     }
     span.value {
         padding: 0px 6px 0px 6px;
@@ -3407,66 +3403,75 @@ TODO: retire this
     }
     span.caption {
         color: #a9a9a9;
-        font-size: 14px;
+        font-size: 16px;
     }
 
 }
 
 .reconfigure-modal {
-    // override some bootstrap modal styles since this is a special box
-    @box-width: 600px;
-    position: absolute;
-    width: @box-width;
-    margin-left: -(@box-width / 2);
     margin-top: 0;
     top: 50px;
     .intro {
         display: flex;
-        justify-content: space-between;
-        flex-wrap: wrap;
+        flex-direction: column;
+        align-items: stretch;
+        border-bottom: 1px solid #eee;
+        .reconfigure-form {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            margin: 10px 0px;
+            span.caption {
+                color: #a9a9a9;
+                font-size: 14px;
+            }
+            .inline-edit {
+                width: 2em;
+                padding: 0px 6px;
+                margin: 0px 5px;
+                height: 28px;
+                font-size: 24px;
+                font-family: @sans;
+            }
+        }
     }
-    p {
-        max-width: 500px;
+    .alert.error {
+        display: none;
     }
     .modal-body {
         max-height: 100%;
+        .reconfigure-diff {
+            max-height: 600px;
+            overflow-y: auto;
+        }
     }
     .modal-footer {
         .btn {
             display: none
         }
     }
-    span.caption {
-        color: #a9a9a9;
-        font-size: 14px;
-    }
-    .reconfigure-form {
-        display: flex;
-        align-items: center;
-        margin: 0px;
-        .inline-edit {
-            width: 2em;
-            padding: 0px 6px;
-            margin: 0px 5px;
-            height: 28px;
-            font-size: 24px;
-            font-family: @sans;
-        }
-    }
     .reconfigure-diff {
-        li {
-            //height: 10px;
-        }
         display: block;
-        font-size: 10px !important;
-        .deleted {
-            color: #aaa;
-            //text-decoration: line-through;
-            background-color: rgba(255, 0, 0, 0.10);
-            a {
-                color: #aaa;
-                //text-decoration: line-through;
+        @li-height: 30px;
+        p {
+            font-size: 12px !important;
+            line-height: @li-height !important;
+        }
+        li.parent .parent-info p.name {
+            width: 100%;
+        }
+        &.tree-view li {
+            .num-keys, .role.primary, .role.secondary {
+                position: static;
+                width: 50%;
+                float: right;          
             }
+        }
+        div.server-info.child-info {
+            height: @li-height;
+        }
+        li.deleted {
+            background-color: rgba(255, 0, 0, 0.10);
         }
         .added {
             background-color: rgba(0,255,0, 0.10);
@@ -3476,6 +3481,10 @@ TODO: retire this
             border-radius: 5px;
             padding: 2px;
             border: 2px solid red;
+            .deleted {
+                color: #888;
+                text-decoration: line-through;
+            }
         }
     }
 }

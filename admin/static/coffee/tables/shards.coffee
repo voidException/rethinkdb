@@ -145,7 +145,7 @@ module 'TableView', ->
                 .attr('width', bar_width)
                 .attr( 'height', (d) -> return y(d.num_keys))
                 .attr( 'title', (d) ->
-                    return "Shard: #{d.index}<br />~#{d.num_keys} keys"
+                    return "Shard: #{d.index + 1}<br />~#{d.num_keys} keys"
                 )
 
             bars.transition()

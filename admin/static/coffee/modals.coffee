@@ -404,20 +404,22 @@ module 'Modals', ->
 
         class: 'reconfigure-modal'
 
-        events:
+        custom_events: $.extend(UIComponents.AbstractModal.events,
             'keyup .replicas.inline-edit': 'change_replicas'
             'keyup .shards.inline-edit': 'change_shards'
+        )
 
         initialize: (obj) =>
+            @events = $.extend(@events, @custom_events)
             @fetch_dryrun()
             @listenTo @model, 'change:num_replicas_per_shard', @fetch_dryrun
             @listenTo @model, 'change:num_shards', @fetch_dryrun
+            @listenTo @model, 'change:error', @change_error
             super(obj)
 
         render: =>
-            console.log 'rendering modal'
             super $.extend(@model.toJSON(),
-                modal_title: "Reconfigure shards and replicas for " +
+                modal_title: "Sharding and replication for " +
                     "#{@model.get('db')}.#{@model.get('name')}"
                 btn_primary_text: 'Apply'
             )
@@ -426,6 +428,13 @@ module 'Modals', ->
                 model: @model
                 el: @$('.reconfigure-diff')[0]
             @
+        change_error: =>
+            if @model.get('error')?
+                @$('.apply.btn').prop disabled: true
+                @$('.alert.error').append(@model.get('error')).show()
+            else
+                @$('.apply.btn').prop disabled: false
+                @$('.alert.error').hide().html('')
         
         remove: =>
             if diff_view?
@@ -443,7 +452,6 @@ module 'Modals', ->
                 @model.set 'num_shards', num
 
         fetch_dryrun: =>
-            
             if not @model.get('num_shards')? or not @model.get('num_replicas_per_shard')?
                 return
             id = (x) -> x
@@ -475,13 +483,14 @@ module 'Modals', ->
             driver.run_once query, (error, result) =>
                 if error?
                     @model.set
-                        error: error.message
+                        error: error.msg
+                        shards: []
                 else
+                    @model.set error: null
                     @model.set
                         shards: @fixup_shards result.old_val,
                             result.new_val
                             result.lookups
-                        error: null
 
         # Sorts shards in order of current primary first, old primary (if
         # any), then secondaries in lexicographic order
@@ -504,6 +513,11 @@ module 'Modals', ->
 
         fixup_shards: (old_shards, new_shards, lookups) =>
             shard_diffs = []
+            if @model.get('total_keys') < new_shards.length
+                @model.set
+                    error:
+                        "This table doesn't have enough documents for this many shards"
+                return []
             docs_per_shard = Math.round(
                 @model.get('total_keys') / new_shards.length)
 
