@@ -375,9 +375,12 @@ bool do_serve(io_backender_t *io_backender,
                         logNTC("Server ready, \"%s\" %s\n",
                                machine_name.c_str(),
                                uuid_to_str(machine_id).c_str());
+
                     } else {
                         logNTC("Proxy ready");
                     }
+
+                    // XXX here is where version checking should occur?
 
                     stop_cond->wait_lazily_unordered();
 
