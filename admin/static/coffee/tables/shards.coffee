@@ -95,8 +95,10 @@ module 'TableView', ->
             @$('.outdated_distribution').slideUp 'fast'
             @$('.shard-diagram').show()
 
-            max_keys = d3.max @collection.models, (shard) -> return shard.get('num_keys')
-            min_keys = d3.min @collection.models, (shard) -> return shard.get('num_keys')
+            max_keys = d3.max @collection.models, (shard) ->
+                return shard.get('num_keys')
+            min_keys = d3.min @collection.models, (shard) ->
+                return shard.get('num_keys')
 
             svg_width = 328 # Width of the whole svg
             svg_height = 270 # Height of the whole svg
@@ -321,7 +323,8 @@ module 'TableView', ->
             ignore = (shard) -> shard('role').ne('nothing')
             query = r.db(@model.get('db')).table(@model.get('name')).reconfigure(
                 new_num_shards,
-                r.db(system_db).table('table_status').get(@model.get('id'))('shards').nth(0).filter(ignore).count()
+                r.db(system_db).table('table_status')
+                    .get(@model.get('id'))('shards')(0).filter(ignore).count()
             )
             driver.run_once query, (error, result) =>
                 if error?

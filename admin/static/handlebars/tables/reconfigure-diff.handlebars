@@ -18,15 +18,17 @@
       <p class="name"><a href="#/servers/{{id}}">{{name}}</a></p>
       {{#unless role_change}}
       {{#if role}}
-      <p class="role {{role}}"><span class="highlight">{{capitalize role}} replica</span></p>
+      <p class="role role-{{role}}">{{capitalize role}} replica</p>
       {{else}}
-      <p class="role {{old_role}}"><span class="highlight">{{capitalize old_role}} replica</span></p>
+      <p class="role role-{{old_role}}">{{capitalize old_role}} replica</p>
       {{/if}}
       {{else}}
-      <p class="role {{role}}">
+      <p class="role">
         <span class="highlight change">
-          <span class="deleted">{{capitalize old_role}}</span> <b>&rarr;</b>
-          {{capitalize role}} replica
+          <span class="deleted role-{{old_role}}">
+            {{capitalize old_role}}</span>
+          <b>&rarr;</b>
+          <span class="added role-{{role}}">{{capitalize role}} replica</span>
         </span>
       </p> 
       {{/unless}}

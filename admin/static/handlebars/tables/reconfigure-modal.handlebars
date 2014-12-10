@@ -5,19 +5,36 @@
     When you're satisfied with the server assignments, click "Apply" to
     enact the changes.
   </p>
+  <p>
+    Note that making changes to shards will result in the table being
+    unavailable while backfilling occurs.
+  </p>
   <form class="reconfigure-form">
     <div>
       <input class="shards inline-edit"
              value="{{num_shards}}"></input>
       <span class="caption">shards</span>
+      <div class="max caption">
+        max: {{max_shards}}
+      </div>
     </div>
     <div>
       <input class="replicas inline-edit"
              value="{{num_replicas_per_shard}}"></input>
       <span class="caption">replicas per shard</span>
+      <div class="max caption">
+        max: {{max_replicas_per_shard}}
+      </div>
     </div>
     <button class="apply btn-primary btn">Apply</button>
   </form>
+  
+  <div class="legend">
+    <span><img src="images/server-icon-added.png"/> = Server added</span>
+    <span><img src="images/server-icon-removed.png"/> = Server removed</span>
+    <span><img src="images/server-icon.png"/> = Server unchanged</span>
+  </div>
+
 </div>
 <div class="alert alert-error error"></div>
 <div class='reconfigure-diff tree-view'></div>

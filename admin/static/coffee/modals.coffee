@@ -362,7 +362,7 @@ module 'Modals', ->
             super
 
             if @$('.verification').val().toLowerCase() is 'remove'
-                query = r.db('rethinkdb').table('table_config')
+                query = r.db(system_db).table('table_config')
                     .get(@model.get('id')).delete()
                 driver.run_once query, (err, result) =>
                         if err?
@@ -431,9 +431,9 @@ module 'Modals', ->
         change_error: =>
             if @model.get('error')?
                 @$('.apply.btn').prop disabled: true
-                @$('.alert.error').append(@model.get('error')).show()
+                @$('.alert.error').html('').append(@model.get('error')).show()
             else
-                @$('.apply.btn').prop disabled: false
+                @$('.apply.btn').removeAttr 'disabled'
                 @$('.alert.error').hide().html('')
         
         remove: =>
@@ -444,15 +444,42 @@ module 'Modals', ->
         change_replicas: =>
             num = parseInt @$('.replicas.inline-edit').val()
             if not isNaN num
-                @model.set 'num_replicas_per_shard', num
+                @model.set
+                    num_replicas_per_shard: num
+                    error: null
 
         change_shards: =>
             num = parseInt @$('.shards.inline-edit').val()
             if not isNaN num
-                @model.set 'num_shards', num
+                @model.set
+                    num_shards: num
+                    error: null
+
+        on_submit: ->
+            super
+            new_or_unchanged = (doc) ->
+                doc('change').eq('added').or(doc('change').not())
+            new_shards = r.expr(@model.get('shards')).filter(new_or_unchanged)
+                .map((shard) ->
+                    director: shard('replicas').filter(role: 'primary')(0)('id')
+                    replicas: shard('replicas').filter(new_or_unchanged)('id')
+                )
+
+            query = r.db(system_db).table('table_config', identifierFormat: 'uuid')
+                .get(@model.get('id'))
+                .update {shards: new_shards}, {returnChanges: true}
+            driver.run_once query, (error, result) =>
+                if error?
+                    @model.set error: error.msg
+                else
+                    @reset_buttons()
+                    @remove()
+                
+            
 
         fetch_dryrun: =>
             if not @model.get('num_shards')? or not @model.get('num_replicas_per_shard')?
+                @model.set(error: 'Must set both shards and replica counts')
                 return
             id = (x) -> x
             query = r.db(@model.get('db'))

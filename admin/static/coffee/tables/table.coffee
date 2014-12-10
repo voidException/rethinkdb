@@ -33,6 +33,7 @@ module 'TableView', ->
                             null,
                             table.merge(
                                 num_shards: table("shards").count()
+                                max_shards: 32
                                 # TODO: replace with primary once "director" is out
                                 num_available_shards: table("shards").filter((shard) ->
                                     shard('replicas')(shard('replicas')('server').indexesOf(shard('director'))(0))('state').eq('ready')
@@ -239,8 +240,8 @@ module 'TableView', ->
             @secondary_indexes_view = new TableView.SecondaryIndexesView
                 collection: @indexes
                 model: @model
-            @replicas = new TableView.Replicas
-                model: @model
+            #@replicas = new TableView.Replicas
+            #    model: @model
             @shards = new TableView.Sharding
                 collection: @distribution
                 model: @model
@@ -292,7 +293,7 @@ module 'TableView', ->
             @$('.performance-graph').html @performance_graph.render().$el
 
             # Display the replicas
-            @$('.replication').html @replicas.render().el
+            #@$('.replication').html @replicas.render().el
 
             # Display the shards
             @$('.sharding').html @shards.render().el
@@ -346,7 +347,7 @@ module 'TableView', ->
         remove: =>
             @title.remove()
             @profile.remove()
-            @replicas.remove()
+            #@replicas.remove()
             @shards.remove()
             @server_assignments.remove()
             @performance_graph.remove()
@@ -379,11 +380,13 @@ module 'TableView', ->
                 @reconfigure_modal.remove()
             @reconfigure_modal = new Modals.ReconfigureModal
                 model: new Reconfigure
+                    id: @model.get('id')
                     db: @model.get('db')
                     name: @model.get('name')
                     total_keys: @model.get('total_keys')
                     shards: []
                     num_shards: @model.get('num_shards')
+                    max_shards: @model.get('max_shards')
                     num_replicas_per_shard: @model.get('num_replicas_per_shard')
                     max_replicas_per_shard: @model.get('max_replicas_per_shard')
             @reconfigure_modal.render()
