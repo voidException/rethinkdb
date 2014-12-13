@@ -95,10 +95,10 @@ module 'TableView', ->
             @$('.outdated_distribution').slideUp 'fast'
             @$('.shard-diagram').show()
 
-            max_keys = d3.max @collection.models, (shard) ->
-                return shard.get('num_keys')
-            min_keys = d3.min @collection.models, (shard) ->
-                return shard.get('num_keys')
+            max_keys = d3.max(@collection.models, (shard) ->
+                return shard.get('num_keys')) ? 100
+            min_keys = d3.min(@collection.models, (shard) ->
+                return shard.get('num_keys')) ? 0
 
             svg_width = 328 # Width of the whole svg
             svg_height = 270 # Height of the whole svg
