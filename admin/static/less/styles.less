@@ -3482,16 +3482,20 @@ TODO: retire this
         &.tree-view li {
             p.role {
                 position: static;
-                width: 50%;
+                width: 55%;
                 float: right;
             }
+            span.role-primary, span.role-secondary {
+                padding-left: 25px;
+                margin-left: 5px;
+            }
             .role-secondary {
-                color: #a9a9a9;
                 font-weight: normal;
+                background: left center no-repeat url('images/grid-icon.png');
             }
             .role-primary {
-                color: #f7ae41;
                 font-weight: bold;
+                background: left center no-repeat url('images/layers-icon.png');
             }
         }
         div.server-info.child-info {
@@ -3506,12 +3510,13 @@ TODO: retire this
         .added {
             background-color: rgba(0,255,0, 0.10);
         }
-        .highlight.change {
+        .change {
             .deleted {
                 text-decoration: line-through;
             }
             .added {
                 background-color: transparent;
+                color: #f7ae41;
             }
         }
     }
