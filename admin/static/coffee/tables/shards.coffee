@@ -8,7 +8,6 @@ module 'TableView', ->
         className: 'shards_container'
         template:
             main: Handlebars.templates['shards_container-template']
-            status: Handlebars.templates['shard_status-template']
 
         view_template: Handlebars.templates['view_shards-template']
         edit_template: Handlebars.templates['edit_shards-template']
@@ -18,7 +17,6 @@ module 'TableView', ->
 
 
         initialize: (data) =>
-            @listenTo @model, 'change:num_available_shards', @render_status
             if @collection?
                 @listenTo @collection, 'update', @render_data_distribution
 
@@ -27,43 +25,15 @@ module 'TableView', ->
             @shard_settings = new TableView.ShardSettings
                 model: @model
                 container: @
-            @progress_bar = new UIComponents.OperationProgressBar @template.status
 
         set_distribution: (shards) =>
             @collection = shards
             @listenTo @collection, 'update', @render_data_distribution
             @render_data_distribution()
 
-
-        # Render the status of sharding
-        render_status: =>
-            # If some shards are not ready, it means some replicas are also not ready
-            # In this case the replicas view will call fetch_progress every seconds,
-            # so we do need to set an interval to refresh more often
-            progress_bar_info =
-                got_response: true
-
-            if @model.get('num_available_shards') < @model.get('num_shards')
-                if @progress_bar.get_stage() is 'none'
-                    @progress_bar.skip_to_processing() # if the stage is 'none', we skipt to processing
-
-            @progress_bar.render(
-                @model.get('num_available_shards'),
-                @model.get('num_shards'),
-                progress_bar_info
-            )
-            return @
-
         render: =>
             @$el.html @template.main()
             @$('.edit-shards').html @shard_settings.render().$el
-
-            @$('.shard-status').html @progress_bar.render(
-                @model.get('num_available_shards'),
-                @model.get('num_shards'),
-                {got_response: true}
-            ).$el
-
             @init_chart = false
             setTimeout => # Let the element be inserted in the main DOM tree
                 @render_data_distribution()
@@ -86,8 +56,9 @@ module 'TableView', ->
                 @$('.outdated_distribution').slideDown 'fast'
 
         render_data_distribution: =>
-            if not @collection?
-                return 0
+            if not @collection? or @collection.length == 0
+                return
+                console.log 'Collection was empty dangit!'
 
             $('.tooltip').remove()
 
@@ -190,7 +161,7 @@ module 'TableView', ->
             axe_legend = []
             axe_legend.push
                 x: margin_width
-                y: Math.floor(margin_height/2)
+                y: Math.floor(margin_height/2 + 2)
                 string: 'Docs'
                 anchor: 'middle'
             axe_legend.push

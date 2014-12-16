@@ -67,10 +67,10 @@ module 'TableView', ->
                     @$('.settings_alert').fadeIn 'fast'
                 return 1
 
-            query = r.db(@model.get('db')).table(@model.get('name')).reconfigure(
-                r.db(system_db).table('table_config').get(@model.get('id'))('shards').count(),
-                new_num_replicas
-            )
+            # query = r.db(@model.get('db')).table(@model.get('name')).reconfigure(
+            #     r.db(system_db).table('table_config').get(@model.get('id'))('shards').count(),
+            #     new_num_replicas
+            # )
             driver.run_once query, (error, result) =>
                 if error?
                     @render_replicas_error () =>

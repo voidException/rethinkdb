@@ -2378,7 +2378,7 @@ TODO: retire this
     }
     .section h2.title {
         border-bottom: thin solid #f0f0f0;
-        padding-bottom: 22px;
+        padding-bottom: 15px;
         margin-bottom: 0;
     }
     .section.statistics {
@@ -2617,7 +2617,7 @@ TODO: retire this
     .section.replication {
         h2.title {
             border-bottom: none;
-            padding-bottom: 10px;
+            padding-bottom: 5px;
         }
         .nav-tabs { padding-left: 0; }
         p, a { font-family: @sans; }
@@ -2856,10 +2856,6 @@ TODO: retire this
         }
     }
     .section.sharding {
-        h2.title {
-            border-bottom: none;
-            padding-bottom: 10px;
-        }
         .edit-shards {
             @icon_width: 40px;
             margin: 20px 0;
@@ -2901,6 +2897,7 @@ TODO: retire this
             }
         }
         .shard-graph {
+
             line { stroke: #dcdcdc; }
             .rect { fill: #9ad7f2; }
             text { fill: #a3a3a3; }
@@ -2908,8 +2905,7 @@ TODO: retire this
                 display: none;
                 width: 100%;
                 height: 100%;
-                //width: 700px;
-                //height: 350px;
+                padding: 4px;
             }
         }
     }
@@ -3129,7 +3125,7 @@ TODO: retire this
     ----------------------------
 */
 
-.replica-status, .shard-status{
+.backfill-progress {
     p {
         margin: 0;
         line-height: 48px;
@@ -3157,7 +3153,7 @@ TODO: retire this
     border-bottom: 1px solid #efefef;
     margin-bottom: 20px;
 }
-.replica-status, .shard-status, .secondary_indexes {
+.secondary_indexes {
     font-family: @sans;
     font-size: 15px;
     color: #72BDDF;
@@ -3168,38 +3164,38 @@ TODO: retire this
         font-size: 24px;
         color: #5C6169;
     }
-
-    .progress-status {
+}
+.progress-status {
+    padding: 10px 0;
+    p {
+        color: #a9a9a9;
+        line-height: normal;
+    }
+    .progress {
+        height: 12px;
+        .border-radius(12px);
+        width: 65%;
+        .bar {
+            width: 100%;
+            background-color: #f7ad41;
+            .gradient(~"linear-gradient(bottom, rgba(247,175,67,1), rgba(249,190,103, 1))"); // gradient overlay
+            .box-shadow(~"0 2px 1px rgba(0,0,0,.04), inset 0 -1px 2px rgba(0,0,0,.05)"); // drop shadow and inner shadow
+        }
+    }
+    .stages {
+        width: 30%;
+        float: right;
         p {
-            color: #a9a9a9;
-            line-height: normal;
-        }
-        .progress {
-            height: 12px;
-            .border-radius(12px);
-            width: 65%;
-            .bar {
-                width: 100%;
-                background-color: #f7ad41;
-                .gradient(~"linear-gradient(bottom, rgba(247,175,67,1), rgba(249,190,103, 1))"); // gradient overlay
-                .box-shadow(~"0 2px 1px rgba(0,0,0,.04), inset 0 -1px 2px rgba(0,0,0,.05)"); // drop shadow and inner shadow
-            }
-        }
-        .stages {
-            width: 30%;
-            float: right;
-            p {
-                text-align: right;
+            text-align: right;
+            font-size: 13px;
+            margin: -3px 0px 15px 0px;
+            &.completed:before {
+                content: '\2714';
+                display: block;
+                float: left;
                 font-size: 13px;
-                margin: -3px 0px 15px 0px;
-                &.completed:before {
-                    content: '\2714';
-                    display: block;
-                    float: left;
-                    font-size: 13px;
-                    color: #4E9258;
-                    padding-left: 10px;
-                }
+                color: #4E9258;
+                padding-left: 10px;
             }
         }
     }
@@ -3426,16 +3422,20 @@ TODO: retire this
                 color: #555;
                 font-size: 14px;
             }
+            button.apply {
+                font-size: 14px;
+                margin-top: 3px;
+            }
             .inline-edit {
-                width: 2em;
-                padding: 0px 6px;
-                margin: 0px 5px;
+                margin: 4px 6px 3px 0px;
+                width: 30px;
+                padding: 3px 4px;
                 height: 28px;
-                font-size: 24px;
+                font-size: 20px;
                 font-family: @sans;
             }
             .max.caption {
-                padding: 0px 6px;
+                padding: 0px 1px;
                 color: #a9a9a9;
                 font-size: 10px;
             }

@@ -474,6 +474,12 @@ module 'Modals', ->
                 else
                     @reset_buttons()
                     @remove()
+                    parent = @model.get('parent')
+                    parent.model.set
+                        num_replicas_per_shard: @model.get 'num_replicas_per_shard'
+                        num_shards: @model.get 'num_shards'
+                    parent.progress_bar.skip_to_processing()
+                    @model.get('parent').fetch_progress()
                 
             
 
@@ -545,24 +551,18 @@ module 'Modals', ->
                     error:
                         "This table doesn't have enough documents for this many shards"
                 return []
-            docs_per_shard = Math.round(
-                @model.get('total_keys') / new_shards.length)
-
             # first handle shards that are in old (and possibly in new)
             for old_shard, i in old_shards
                 if i >= new_shards.length
                     new_shard = {director: null, replicas: []}
                     shard_deleted = true
-                    num_docs = 0
                 else
                     new_shard = new_shards[i]
                     shard_deleted = false
-                    num_docs = docs_per_shard
 
                 shard_diff =
                     replicas: []
                     change: if shard_deleted then 'deleted' else null
-                    num_docs: num_docs
 
                 # handle any deleted and remaining replicas for this shard
                 for replica in old_shard.replicas
@@ -599,7 +599,6 @@ module 'Modals', ->
                 shard_diff =
                     replicas: []
                     change: 'added'
-                    num_docs: docs_per_shard
                 for replica in new_shard.replicas
                     shard_diff.replicas.push
                         name: replica

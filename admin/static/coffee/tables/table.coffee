@@ -63,10 +63,12 @@ module 'TableView', ->
                                 total_keys: null
                             ).do( (table) ->
                                 r.branch( # We must be sure that the table is ready before retrieving these keys
-                                    table('status')('ready_for_reads').not(),
+                                    table('status')('ready_for_writes').not(),
                                     table,
                                     table.merge({
-                                        indexes: r.db(table("db")).table(table("name")).indexStatus()
+                                        indexes: r.db(table("db"))
+                                            .table(table("name"), {useOutdated: true})
+                                            .indexStatus()
                                             .pluck('index', 'ready', 'blocks_processed', 'blocks_total')
                                             .merge( (index) -> {
                                                 id: index("index")
@@ -74,20 +76,20 @@ module 'TableView', ->
                                                 table: table("name")
                                             }) # add an id for backbone
                                         distribution: r.db(table('db'))
-                                            .table(table('name'))
+                                            .table(table('name'), {useOutdated: true})
                                             .info()('doc_count_estimates')
                                             .map(r.range(), (num_keys, position) ->
                                                 num_keys: num_keys
                                                 id: position)
                                             .coerceTo('array')
                                         total_keys: r.db(table('db'))
-                                            .table(table('name'))
+                                            .table(table('name'), {useOutdated: true})
                                             .info()('doc_count_estimates')
                                             .sum()
                                         shards_assignments: table('shards_assignments').map(r.range(), (shard_assignment, position) ->
                                             shard_assignment.merge {
                                                 num_keys: r.db(table('db'))
-                                                    .table(table('name'))
+                                                    .table(table('name'), {useOutdated: true})
                                                     .info()('doc_count_estimates')(position)
                                             }
                                         ).coerceTo('array')
@@ -366,7 +368,9 @@ module 'TableView', ->
     # TableView.ReconfigurePanel
     class @ReconfigurePanel extends Backbone.View
         className: 'reconfigure-panel'
-        template: Handlebars.templates['reconfigure']
+        templates:
+            main: Handlebars.templates['reconfigure']
+            status: Handlebars.templates['replica_status-template']
         events:
             'click .reconfigure.btn': 'launch_modal'
 
@@ -374,12 +378,18 @@ module 'TableView', ->
             @model = obj.model
             @listenTo @model, 'change:num_shards', @render
             @listenTo @model, 'change:num_replicas_per_shard', @render
+            @listenTo @model, 'change:num_available_replicas', @render_status
+            # maybe?
+            #@listenTo @model, 'change:num_available_shards', @render_status
+            @progress_bar = new UIComponents.OperationProgressBar @templates.status
+            @timer = null
 
         launch_modal: =>
             if @reconfigure_modal?
                 @reconfigure_modal.remove()
             @reconfigure_modal = new Modals.ReconfigureModal
                 model: new Reconfigure
+                    parent: @
                     id: @model.get('id')
                     db: @model.get('db')
                     name: @model.get('name')
@@ -394,10 +404,64 @@ module 'TableView', ->
         remove: =>
             if @reconfigure_modal?
                 @reconfigure_modal.remove()
+            if timer?
+                driver.stop_timer @timer
+                @timer = null
+            @progress_bar.remove()
             super()
 
+        fetch_progress: =>
+            query = r.db(system_db).table('table_status')
+                .get(@model.get('id'))('shards')('replicas').concatMap((x) -> x)
+                .do((replicas) ->
+                    num_available_replicas: replicas.filter(state: 'ready').count()
+                    num_replicas: replicas.count()
+                )
+            if @timer?
+                driver.stop_timer @timer
+                @timer = null
+            @timer = driver.run query, 1000, (error, result) =>
+                if error?
+                    # This can happen if the table is temporarily
+                    # unavailable. We log the error, and ignore it
+                    console.log "Nothing bad - Could not fetch replicas statuses"
+                    console.log error
+                else
+                    @model.set result
+                    @render_status()  # Force to refresh the progress bar
+
+        # Render the status of the replicas and the progress bar if needed
+        render_status: =>
+            #TODO Handle backfilling when available in the api directly
+            if @model.get('num_available_replicas') < @model.get('num_replicas')
+                if not @timer?
+                    @fetch_progress()
+                    return
+
+                if @progress_bar.get_stage() is 'none'
+                    @progress_bar.skip_to_processing()
+
+            else if @model.get('num_available_replicas') is @model.get('num_replicas')
+                if @timer?
+                    driver.stop_timer @timer
+                    @timer = null
+
+            @progress_bar.render(
+                @model.get('num_available_replicas'),
+                @model.get('num_replicas'),
+                {got_response: true}
+            )
+
         render: =>
-            @$el.html @template @model.toJSON()
+            @$el.html @templates.main @model.toJSON()
+            if @model.get('num_available_replicas') < @model.get('num_replicas')
+                if @progress_bar.get_stage() is 'none'
+                    @progress_bar.skip_to_processing()
+            @$('.backfill-progress').html @progress_bar.render(
+                @model.get('num_available_replicas'),
+                @model.get('num_replicas'),
+                {got_response: true},
+            ).$el
             @
 
     # TableView.ReconfigureDiffView
