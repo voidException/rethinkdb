@@ -502,7 +502,7 @@ class HttpConnection extends Connection
             # about "No element found" when trying to parse the response as xml.
             xhr.responseType = "arraybuffer"
 
-                xhr.send()
+            xhr.send()
             @_url = null
             @_connId = null
             super()
