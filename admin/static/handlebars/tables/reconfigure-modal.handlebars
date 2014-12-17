@@ -1,13 +1,13 @@
 <div class="intro">
   <p>
-    View the results of changing sharding and replication for the table
-    <strong>{{db}}.{{name}}</strong>.
-    When you're satisfied with the server assignments, click "Apply" to
-    enact the changes.
+    Experiment with sharding and replication changes for this table.
   </p>
   <p>
-    Note that making changes to shards will result in the table being
-    unavailable while backfilling occurs.
+    When you're satisfied, click "Apply configuration" to enact the changes.
+  </p>
+  <p>
+    <strong>Note:</strong> Changes to shards will cause the table to
+    become unavailable while backfilling occurs.
   </p>
   <form class="reconfigure-form">
     <div>
@@ -28,13 +28,11 @@
     </div>
     <button class="apply btn-primary btn">Apply configuration</button>
   </form>
-  
-  <div class="legend">
-    <span><img src="images/server-icon-added.png"/> = Server added</span>
-    <span><img src="images/server-icon-removed.png"/> = Server removed</span>
-    <span><img src="images/server-icon.png"/> = Server unchanged</span>
-  </div>
-
 </div>
 <div class="alert alert-error error"></div>
 <div class='reconfigure-diff tree-view'></div>
+<div class="legend">
+  <span><img src="images/server-icon-added.png"/> Server added</span>
+  <span><img src="images/server-icon-removed.png"/> Server removed</span>
+  <span><img src="images/server-icon.png"/> Server unchanged</span>
+</div>

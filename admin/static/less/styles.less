@@ -3407,8 +3407,41 @@ TODO: retire this
 }
 
 .reconfigure-modal {
+    @header-height: 53px;
+    @intro-height: 201px;
+    @legend-height: 39px;
+    @footer-height: 30px;
+    @min-diff-height: 110px;
+    @min-height: @header-height + @intro-height + @legend-height + @footer-height + @min-diff-height;
     margin-top: 0;
     top: 50px;
+    max-height: calc(100vh);
+    min-height: @min-height;
+    .flex();
+    .flex-direction(column);
+    .alert_modal, alert.error {
+        display: none;
+    }
+    .modal-body {
+        max-height: 100%;
+        overflow-y: hidden;
+        .reconfigure-diff {
+            overflow-y: auto;
+            min-height: @min-diff-height;
+            max-height: calc(100vh ~"-" @min-height);
+        }
+    }
+    .modal-footer {
+        display: block;
+        &:after {
+            content: none;
+            display: none;
+            clear: none;
+        }
+        .btn {
+            display: none;
+        }
+    }
     .intro {
         .flex();
         .flex-direction(column);
@@ -3425,6 +3458,7 @@ TODO: retire this
             button.apply {
                 font-size: 14px;
                 margin-top: 3px;
+                padding-bottom: 7px;
             }
             .inline-edit {
                 margin: 4px 6px 3px 0px;
@@ -3440,29 +3474,23 @@ TODO: retire this
                 font-size: 10px;
             }
         }
-        .legend {
+    }
+    .legend {
+        .flex();
+        .flex-justify(space-between);
+        border-radius: 5px;
+        border: 1px solid #aaa;
+        padding: 8px 10px;
+        margin-bottom: 4px;
+        background-color: #fafafa;
+        span {
             .flex();
-            .flex-justify(space-between);
-            border-radius: 5px;
-            border: 1px solid #aaa;
-            padding: 4px 6px;
-            margin-bottom: 4px;
-            background-color: #fafafa;
+            .flex-align-items(center);
         }
-    }
-    .alert.error {
-        display: none;
-    }
-    .modal-body {
-        max-height: 100%;
-        .reconfigure-diff {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-    }
-    .modal-footer {
-        .btn {
-            display: none
+        img {
+            width: 20px;
+            height: 15px;
+            margin: 3px 5px;
         }
     }
     .reconfigure-diff {
@@ -3484,10 +3512,8 @@ TODO: retire this
                 position: static;
                 width: 55%;
                 float: right;
-            }
-            span.role-primary, span.role-secondary {
-                padding-left: 25px;
-                margin-left: 5px;
+                padding-left: 20px;
+                background-size: 14px 14px;
             }
             .role-secondary {
                 font-weight: normal;
@@ -3500,15 +3526,23 @@ TODO: retire this
         }
         div.server-info.child-info {
             height: @li-height;
+            margin-left: 30px;
+            padding-left: 25px;
+            background-size: 20px 15px !important;
         }
-        li.deleted {
-            background-color: rgba(255, 0, 0, 0.05);
-            .role {
-                text-decoration: line-through;
+        li {
+            &.deleted {
+                background-color: rgba(255, 0, 0, 0.05);
+                .role {
+                    text-decoration: line-through;
+                }
             }
-        }
-        .added {
-            background-color: rgba(0,255,0, 0.10);
+            &.added {
+                background-color: rgba(0,255,0, 0.10);
+            }
+            &.role-change {
+                background-color: rgba(255, 255, 0, 0.10);
+            }
         }
         .change {
             .deleted {
