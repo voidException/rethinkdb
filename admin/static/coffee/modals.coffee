@@ -407,6 +407,8 @@ module 'Modals', ->
         custom_events: $.extend(UIComponents.AbstractModal.events,
             'keyup .replicas.inline-edit': 'change_replicas'
             'keyup .shards.inline-edit': 'change_shards'
+            'click .expand-tree': 'expand_tree'
+            'click .collapse-tree': 'collapse_tree'
         )
 
         initialize: (obj) =>
@@ -414,8 +416,29 @@ module 'Modals', ->
             @fetch_dryrun()
             @listenTo @model, 'change:num_replicas_per_shard', @fetch_dryrun
             @listenTo @model, 'change:num_shards', @fetch_dryrun
-            @listenTo @model, 'change:error', @change_error
+            @listenTo @model, 'change:errors', @change_errors
+            @listenTo @model, 'change:server_error', @get_errors
+            # flag for whether to show an error on empty text boxes.
+            # When submitting, we want to show an error. When checking
+            # on keyup, we shouldn't do anything
+            @error_on_empty = false
             super(obj)
+
+        expand_tree: (event) =>
+            event.preventDefault()
+            @$('.legend').show().css(display: 'flex')
+            @$('.reconfigure-diff').show()#slideDown()
+            @$('.expand-tree').hide()
+            @$('.collapse-tree').show().css(display: 'block')
+            @$('.reconfigure-modal').addClass('expanded')
+
+        collapse_tree: (event) =>
+            event.preventDefault()
+            @$('.legend').hide()
+            @$('.reconfigure-diff').hide()#.slideUp()
+            @$('.expand-tree').show()
+            @$('.collapse-tree').hide()
+            @$('.reconfigure-modal').removeClass('expanded')
 
         render: =>
             super $.extend(@model.toJSON(),
@@ -428,35 +451,51 @@ module 'Modals', ->
                 model: @model
                 el: @$('.reconfigure-diff')[0]
             @
-        change_error: =>
-            if @model.get('error')?
+        change_errors: =>
+            errors = @model.get('errors')
+            if errors.length > 0
                 @$('.apply.btn').prop disabled: true
-                @$('.alert.error').html('').append(@model.get('error')).show()
+                @$('.alert.error').show()
+                for message in @$('.alert.error p.error')
+                    message = $(message)
+                    message.hide()
+                    for error in errors
+                        if message.hasClass(error)
+                            message.show()
+                            if error == 'server-error'
+                                message('.server-msg').append(
+                                    @model.get('server_error'))
             else
+                @error_on_empty = false
                 @$('.apply.btn').removeAttr 'disabled'
-                @$('.alert.error').hide().html('')
-        
+                @$('.alert.error').hide()
+                @$('.alert.error p.error').hide()
+                @$('.alert.error p.error .server-msg').html('')
+
         remove: =>
             if diff_view?
                 diff_view.remove()
             super()
-            
+
         change_replicas: =>
-            num = parseInt @$('.replicas.inline-edit').val()
-            if not isNaN num
-                @model.set
-                    num_replicas_per_shard: num
-                    error: null
+            replicas = parseInt @$('.replicas.inline-edit').val()
+            if not isNaN(replicas) or @error_on_empty
+                @model.set num_replicas_per_shard: replicas
 
         change_shards: =>
-            num = parseInt @$('.shards.inline-edit').val()
-            if not isNaN num
+            shards = parseInt @$('.shards.inline-edit').val()
+            if not isNaN(shards) or @error_on_empty
                 @model.set
-                    num_shards: num
-                    error: null
+                    num_shards: shards
 
         on_submit: ->
-            super
+            @error_on_empty = true
+            @change_replicas()
+            @change_shards()
+            if @get_errors()
+                return
+            else
+                super
             new_or_unchanged = (doc) ->
                 doc('change').eq('added').or(doc('change').not())
             new_shards = r.expr(@model.get('shards')).filter(new_or_unchanged)
@@ -480,12 +519,34 @@ module 'Modals', ->
                         num_shards: @model.get 'num_shards'
                     parent.progress_bar.skip_to_processing()
                     @model.get('parent').fetch_progress()
+
+        get_errors: =>
+            errors = []
+            if @model.get('num_shards') == 0
+                errors.push 'zero-shards'
+            else if isNaN @model.get('num_shards')
+                errors.push 'no-shards'
+            if @model.get('num_replicas_per_shard') == 0
+                errors.push 'zero-replicas'
+            else if isNaN @model.get('num_replicas_per_shard')
+                errors.push 'no-replicas'
+            if @model.get('num_shards') > @model.get('max_shards')
+                errors.push 'too-many-shards'
+            if @model.get('num_replicas_per_shard') >
+              @model.get('max_replicas_per_shard')
+                errors.push 'too-many-replicas'
+            if @model.get('server_error')?
+                errors.push 'server-error'
+            console.log errors
+            @model.set errors: errors
+            if errors.length > 0
+                @model.set shards: []
+            errors.length > 0
                 
             
 
         fetch_dryrun: =>
-            if not @model.get('num_shards')? or not @model.get('num_replicas_per_shard')?
-                @model.set(error: 'Must set both shards and replica counts')
+            if @get_errors()
                 return
             id = (x) -> x
             query = r.db(@model.get('db'))
@@ -512,14 +573,14 @@ module 'Modals', ->
                                 ]
                         ))
                 )
-                
+
             driver.run_once query, (error, result) =>
                 if error?
                     @model.set
-                        error: error.msg
+                        server_error: error.msg
                         shards: []
                 else
-                    @model.set error: null
+                    @model.set server_error: null
                     @model.set
                         shards: @fixup_shards result.old_val,
                             result.new_val

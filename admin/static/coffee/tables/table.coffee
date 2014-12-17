@@ -349,7 +349,6 @@ module 'TableView', ->
         remove: =>
             @title.remove()
             @profile.remove()
-            #@replicas.remove()
             @shards.remove()
             @server_assignments.remove()
             @performance_graph.remove()
@@ -379,8 +378,6 @@ module 'TableView', ->
             @listenTo @model, 'change:num_shards', @render
             @listenTo @model, 'change:num_replicas_per_shard', @render
             @listenTo @model, 'change:num_available_replicas', @render_status
-            # maybe?
-            #@listenTo @model, 'change:num_available_shards', @render_status
             @progress_bar = new UIComponents.OperationProgressBar @templates.status
             @timer = null
 

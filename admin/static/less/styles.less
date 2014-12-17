@@ -3411,24 +3411,36 @@ TODO: retire this
     @intro-height: 201px;
     @legend-height: 39px;
     @footer-height: 30px;
-    @min-diff-height: 110px;
-    @min-height: @header-height + @intro-height + @legend-height + @footer-height + @min-diff-height;
+    @min-diff-height: 100px;
+    @expanded-min-height: @header-height + @intro-height + @legend-height + @footer-height + @min-diff-height;
+    @collapsed-min-height: @expanded-min-height - @min-diff-height - @legend-height;
     margin-top: 0;
     top: 50px;
-    max-height: calc(100vh);
-    min-height: @min-height;
+    max-height: calc(100vh ~"-" 100px);
+    min-height: @collapsed-min-height;
+    &.expanded {
+        min-height: @expanded-min-height;
+    }
     .flex();
     .flex-direction(column);
-    .alert_modal, alert.error {
+    .flex-justify(space-between);
+    .alert_modal {
         display: none;
+    }
+    .alert.error {
+        display: none;
+        p {
+            // Errors are displayed individually
+            display: none;
+        }
     }
     .modal-body {
         max-height: 100%;
         overflow-y: hidden;
         .reconfigure-diff {
             overflow-y: auto;
-            min-height: @min-diff-height;
-            max-height: calc(100vh ~"-" @min-height);
+            //min-height: @min-diff-height;
+            max-height: calc(100vh ~"-" @collapsed-min-height ~"-" 200px);
         }
     }
     .modal-footer {
@@ -3475,8 +3487,30 @@ TODO: retire this
             }
         }
     }
+    a.expand-tree, a.collapse-tree {
+        &:hover {
+            text-decoration: none;
+        }
+    }
+    a.expand-tree {
+        &::after, &::before {
+                      content: "\25bc";
+                      padding: 0px 10px;
+        }
+        display:block;
+        text-align: center;
+    }
+    a.collapse-tree {
+        &::after, &::before {
+                      content: "\25b2";
+                      padding: 0px 10px;
+        }
+        display: none;
+        text-align: center;
+    }
     .legend {
         .flex();
+        display: none;
         .flex-justify(space-between);
         border-radius: 5px;
         border: 1px solid #aaa;
@@ -3494,7 +3528,7 @@ TODO: retire this
         }
     }
     .reconfigure-diff {
-        display: block;
+        display: none;
         @li-height: 30px;
         p {
             font-size: 12px !important;
